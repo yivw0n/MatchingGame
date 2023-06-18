@@ -1,0 +1,200 @@
+	
+	/** 
+	 * Ivy Cho 
+	 * ICS3U Culminating
+	 * Memory Game
+	 * May 25-June 25, 2023
+	 * Pre: cards.
+	The number of pairs of cards should be a valid number (not too high to cause memory or performance issues).
+	The game should not be already in progress when initializing.
+	
+	 * Post: The game will display the final score once all matches have been found.
+	The game will not display any error messages or exceptions during normal execution.
+	The game will accurately track the score based on the player's successful matches.
+	The game will not allow invalid input, such as selecting already matched cards or out-of-bounds card indices.
+	The game will handle user input, allowing the player to retry if the input is invalid.
+	The game will display the current state of the cards and update it as the player makes successful matches.
+	The game will accurately identify when all matches have been found.
+	The game will not crash or throw errors if the number of pairs exceeds the available card options.
+	
+	Resources used: 
+	https://docs.oracle.com/javase/tutorial/uiswing/components/dialog.html?authuser=4
+	https://www.w3schools.com/java/java_arraylist.asp
+	https://www.youtube.com/watch?v=alwukGslBG8&pp=ygUJYXJyYXlzIDJk 
+	 */
+	import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import javax.swing.Icon;
+import javax.swing.JOptionPane;
+
+public class MemoryGame {
+	private List<String> cards;
+	private List<Boolean> matches;
+	private int score;
+
+    /**
+     * Constructs a MemoryGame object.
+     */
+
+	public MemoryGame() {
+		cards = new ArrayList<>();
+		matches = new ArrayList<>();
+		score = 0;
+	}
+	 /**
+     * Initializes the game by creating pairs of cards and shuffling them.
+     *
+     * @param numPairs the number of pairs of cards to create.
+     */
+	public void initializeGame(int numPairs) {
+		// Create pairs of cards
+		for (int i = 0; i < numPairs; i++) {
+			cards.add(Integer.toString(i + 1));
+			cards.add(Integer.toString(i + 1));
+			matches.add(false);
+			matches.add(false);
+		}
+		Collections.shuffle(cards);
+	}
+	 /**
+     * Starts the memory game by displaying instructions, getting the player's chosen level,
+     * and running the game loop until the game is over.
+     */
+	public void playGame() {
+		Object[] possibilities = { "1", "2", "3", "4", "5" };
+		Icon icon = null;
+		Object frame = null;
+		
+		 // Display game instructions
+		JOptionPane.showMessageDialog((Component) frame,
+				"1. Load into a game and click matching pairs of cards\n" +
+				"2. The higher the level, the higher the difficulty\n" +
+				"3. Try your best to get the least amount of clicks per level to make it on the leaderboard!\n\n" +
+				"Good luck ;)",
+				"How to Play", JOptionPane.PLAIN_MESSAGE);
+
+        // Get the player's chosen level
+		String s = (String) JOptionPane.showInputDialog((Component) frame,
+				"Memory Game 2023\n" + "\"Choose your level:\"", "Customized Dialog", JOptionPane.PLAIN_MESSAGE,
+				icon, possibilities, "ham");
+
+		int level = Integer.parseInt(s);
+		int boardWidth = 0;
+		int boardHeight = 0;
+		int numPairs = 0;
+
+        /** Set board dimensions and number 
+		  * of pairs based on the chosen level
+		**/
+
+		switch (level) {
+			case 1:
+				boardWidth = 4;
+				boardHeight = 3;
+				numPairs = 6;
+				break;
+			case 2:
+				boardWidth = 5;
+				boardHeight = 4;
+				numPairs = 10;
+				break;
+			case 3:
+				boardWidth = 5;
+				boardHeight = 5;
+				numPairs = 12;
+				break;
+			case 4:
+				boardWidth = 6;
+				boardHeight = 5;
+				numPairs = 15;
+				break;
+			case 5:
+				boardWidth = 6;
+				boardHeight = 6;
+				numPairs = 18;
+				break;
+			default:
+				JOptionPane.showMessageDialog((Component) frame, "Invalid level selected.", "Error",
+						JOptionPane.ERROR_MESSAGE);
+				return;
+		}
+
+		Board board = new Board(boardWidth, boardHeight);
+		board.displayMessage("Level " + level);
+
+		int row = 0, col = 0, row2 = 0, col2 = 0;
+		Coordinate loc, loca;
+
+		while (true) {
+			loc = board.getClick();
+			row = loc.getRow();
+			col = loc.getCol();
+			board.putPeg("snail", row, col);
+
+			loca = board.getClick();
+			row2 = loca.getRow();
+			col2 = loca.getCol();
+			board.putPeg("worm", row2, col2);
+
+			if (isValidInput(row, col, row2, col2)) {
+				int index1 = getIndex(row, col, boardWidth);
+				int index2 = getIndex(row2, col2, boardWidth);
+
+				if (cards.get(index1).equals(cards.get(index2))) {
+					matches.set.(matches.get(index1), true);
+					matches.set(index2, true);
+					score++;
+					board.displayMessage("Match found! Score: " + score);
+					} else {
+					board.displayMessage("No match found. Try again!");
+					board.removePeg(row, col);
+					board.removePeg(row2, col2);
+					}
+					} else {
+					board.displayMessage("Invalid move. Try again!");
+					board.removePeg(row, col);
+					board.removePeg(row2, col2);
+					}
+			if (isGameOver()) {
+				board.displayMessage("Game over! Final score: " + score);
+				break;
+			}
+		}
+	}
+
+	private boolean isValidInput(int row, int col, int row2, int col2) {
+		if (row == row2 && col == col2)
+			return false;
+
+		if (row < 0 || row >= boardHeight || col < 0 || col >= boardWidth || row2 < 0 || row2 >= boardHeight
+				|| col2 < 0 || col2 >= boardWidth)
+			return false;
+
+		if (matches.get(getIndex(row, col, boardWidth)) || matches.get(getIndex(row2, col2, boardWidth)))
+			return false;
+
+		return true;
+	}
+
+	private int getIndex(int row, int col, int boardWidth) {
+		return row * boardWidth + col;
+	}
+
+	private boolean isGameOver() {
+		for (boolean match : matches) {
+			if (!match)
+				return false;
+		}
+		return true;
+	}
+
+	public static void main(String[] args) {
+		MemoryGame game = new MemoryGame();
+		game.initializeGame(6);
+		game.playGame();
+	}
+}
+
+
+
